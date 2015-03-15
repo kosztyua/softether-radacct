@@ -17,7 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
- SoftEther RADIUS accounting PHP script
+SoftEther RADIUS accounting PHP script
  
 So I thought I'm not going to wait for others to finally create an accounting mod for SoftEther, and dnobori have no reason to further extend his work. This script is something I wrote in a weekend so I could integrate SoftEther into other parts of my system that already fully use RADIUS.
+
+How does this work? The SoftEther server sends HUB security logs to a remote Syslog-ng server, which execute the scripts when the filter matches. These scripts do accounting start and stop, while interim update is done through cron. 
 
