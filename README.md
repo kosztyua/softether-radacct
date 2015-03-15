@@ -18,3 +18,5 @@ The scripts are created for my needs, it is not guaranteed to work with your set
 5. Modify the SoftEther to send syslog to the syslog-ng server.
 
 6. Profit. 
+
+I will gladly take advices or notes how you corrected this script. Especially if I could get a nice regex - that calls for a beer. 
