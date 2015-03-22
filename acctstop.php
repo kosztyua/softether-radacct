@@ -20,9 +20,11 @@
 <?php
 require_once("settings.php");
 
-$f = fopen( 'php://stdin', 'r' );
-while( $input = fgets( $f ) ) {
+//$f = fopen( 'php://stdin', 'r' );
+//while( $input = fgets( $f ) ) {
+// this method wasnt quite reliable
 
+while( $input = readline() ) {
   $delimiter1 = "Session";
   $delimiter2 = ": The session has been terminated.";
   $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
@@ -82,6 +84,6 @@ while( $input = fgets( $f ) ) {
   $db->exec("DELETE FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1");
   $db->close();
 }
-fclose( $f );
+//fclose( $f );
 
 ?>

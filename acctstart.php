@@ -20,8 +20,11 @@
 <?php
 require_once("settings.php");
 
-$f = fopen( 'php://stdin', 'r' );
-while( $input = fgets( $f ) ) {
+//$f = fopen( 'php://stdin', 'r' );
+//while( $input = fgets( $f ) ) {
+// this method wasnt quite reliable
+
+while( $input = readline() ) {
 
   $delimiter1 = "The new session";
   $delimiter2 = "has been created";
@@ -90,6 +93,6 @@ while( $input = fgets( $f ) ) {
 
   $db->close();
 }
-fclose( $f );
+//fclose( $f );
 
 ?>
