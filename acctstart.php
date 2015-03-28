@@ -37,7 +37,7 @@ function acctstart($input) {
   $sstrlen = $pos2 - $pos1;
   $sessid = substr($input, $pos1, $sstrlen);
 
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
 
   if(strpos($SessionGet[0],"rror occurred") != FALSE) { die("Error - SessionGet resulted in error"); }
   foreach ($SessionGet as $line){
@@ -49,7 +49,7 @@ function acctstart($input) {
   $recheck = 0;
   dhcptest:
   sleep(2);
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
   $ok=0;
   foreach ($IpTable as $line){
     if(strpos($line,$sessid)){

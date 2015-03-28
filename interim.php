@@ -20,7 +20,7 @@
 <?php
 require_once("settings.php");
 
-exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
+exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
 $sessids = array();
 foreach ($SessionList as $index=>$line){
   if(!strpos($line,"Local Bridge") && !strpos($line,"SecureNAT Session") && !strpos($line,"User Name")){
@@ -32,7 +32,7 @@ if(count($sessids)==0){die("No sessions open");}
 $db = new SQLite3($database);
 
 foreach ($sessids as $sessid){
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
   if(strpos($SessionGet[0],"rror occurred") != FALSE) { continue; } // hmm
   foreach ($SessionGet as $line){
     list($key,$val) = explode(",",$line,2);

@@ -26,4 +26,5 @@ $database = "/var/radius/sessions.db"; // temporary database location
 $tmpdir = "/tmp"; // temporary directory
 $hubname = "123"; // softether hub name
 $softetherip = "123"; // softether hub address
+$vpncmd = "/usr/local/vpnserver/vpncmd";
 ?>
