@@ -18,13 +18,17 @@
  */
   
 <?php
-require_once("settings.php");
+$f = fopen( 'php://stdin', 'r' );
+while( $input = fgets( $f ) ) {
+//while( $input = readline() ) {
+  if ($pid = pcntl_fork()) { return; }
+  acctstart($input);
+  fclose($f);
+}
 
-//$f = fopen( 'php://stdin', 'r' );
-//while( $input = fgets( $f ) ) {
-// this method wasnt quite reliable
-
-while( $input = readline() ) {
+function acctstart($input) {
+  require_once("settings.php");
+  $input = $input;
 
   $delimiter1 = "The new session";
   $delimiter2 = "has been created";
@@ -41,6 +45,10 @@ while( $input = readline() ) {
     $result[$key] = $val;
   }
 
+  
+  $recheck = 0;
+  dhcptest:
+  sleep(2);
   exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
   $ok=0;
   foreach ($IpTable as $line){
@@ -54,7 +62,14 @@ while( $input = readline() ) {
     }
   }
 
-  if($ok==0) {die("Error - could not find session in retrived IpTable data");}
+
+  if($ok==0){
+    if($recheck==4) {die("Error - could not find session in retrived IpTable data");}
+    sleep(2);
+    $recheck = $recheck + 1;
+    goto dhcptest;
+  }
+
 
   $db = new SQLite3($database);
 

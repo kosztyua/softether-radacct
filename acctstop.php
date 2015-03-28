@@ -18,13 +18,17 @@
  */
 
 <?php
-require_once("settings.php");
+$f = fopen( 'php://stdin', 'r' );
+while( $input = fgets( $f ) ) {
+//while( $input = readline() ) {
+  if ($pid = pcntl_fork()) { return; }
+  acctstop($input);
+  fclose($f);
+}
 
-//$f = fopen( 'php://stdin', 'r' );
-//while( $input = fgets( $f ) ) {
-// this method wasnt quite reliable
+function acctstop($input) {
+  require_once("settings.php");
 
-while( $input = readline() ) {
   $delimiter1 = "Session";
   $delimiter2 = ": The session has been terminated.";
   $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
