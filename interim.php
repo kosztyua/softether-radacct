@@ -20,7 +20,7 @@
 <?php
 require_once("settings.php");
 
-exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
+exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
 $sessids = array();
 foreach ($SessionList as $index=>$line){
   if(!strpos($line,"Local Bridge") && !strpos($line,"SecureNAT Session") && !strpos($line,"User Name")){
@@ -30,9 +30,9 @@ foreach ($SessionList as $index=>$line){
 if(count($sessids)==0){die("No sessions open");}
 
 $db = new SQLite3($database);
-
+$db->busyTimeout(5000);
 foreach ($sessids as $sessid){
-  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
+  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
   if(strpos($SessionGet[0],"rror occurred") != FALSE) { continue; } // hmm
   foreach ($SessionGet as $line){
     list($key,$val) = explode(",",$line,2);
@@ -50,6 +50,8 @@ foreach ($sessids as $sessid){
   $indata = str_replace($replace1,"",$sessiondata[$sessid]['Incoming Data Size']);
   $outdata = str_replace($replace1,"",$sessiondata[$sessid]['Outgoing Data Size']);
 
+  $acctsessionid = md5($sessid.$results['acctstarttime']);
+
   $tmpfname = tempnam($tmpdir, "interimtmp_");
   $handle = fopen($tmpfname, "w");
 
@@ -60,7 +62,7 @@ foreach ($sessids as $sessid){
             "User-Name = '".$results['username']."'"."\n".
             "Calling-Station-Id = '".$results['clientip']."'"."\n".
             "Called-Station-Id = '".$results['nasip']."'"."\n".
-            "Acct-Session-Id = '".$sessid."'"."\n".
+            "Acct-Session-Id = '".$acctsessionid."'"."\n".
             "Framed-IP-Address = ".$results['framedip']."\n".
             "Acct-Authentic = RADIUS"."\n".
             "Event-Timestamp = ".time()."\n".
@@ -79,3 +81,4 @@ foreach ($sessids as $sessid){
 $db->close();
 
 ?>
+

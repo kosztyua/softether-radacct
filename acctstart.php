@@ -18,96 +18,83 @@
  */
   
 <?php
-$f = fopen( 'php://stdin', 'r' );
-while( $input = fgets( $f ) ) {
-//while( $input = readline() ) {
-  if ($pid = pcntl_fork()) { return; }
-  acctstart($input);
-  fclose($f);
-}
-
-function acctstart($input) {
-  require_once("settings.php");
-  $input = $input;
-
-  $delimiter1 = "The new session";
-  $delimiter2 = "has been created";
-  $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
-  $pos2 = strpos($input, $delimiter2) - 2;
-  $sstrlen = $pos2 - $pos1;
-  $sessid = substr($input, $pos1, $sstrlen);
-
-  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
-
-  if(strpos($SessionGet[0],"rror occurred") != FALSE) { die("Error - SessionGet resulted in error"); }
-  foreach ($SessionGet as $line){
-    list($key,$val) = explode(",",$line,2);
-    $result[$key] = $val;
-  }
-
-  
-  $recheck = 0;
-  dhcptest:
-  sleep(2);
-  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
-  $ok=0;
-  foreach ($IpTable as $line){
-    if(strpos($line,$sessid)){
-      if(strpos($line,"DHCP")){
-        list(,$key,$val) = explode(",",$line);
-        list($framedip) = explode(" ",$val);
-        #$result2[$key] = $val;
-        $ok=1;
-      }
+require_once("settings.php");
+while( $input = readline() ) {
+  $pid = pcntl_fork();
+  if ($pid === -1) { die(); }
+  elseif ($pid === 0) {
+    $delimiter1 = "The new session";
+    $delimiter2 = "has been created";
+    $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
+    $pos2 = strpos($input, $delimiter2) - 2;
+    $sstrlen = $pos2 - $pos1;
+    $sessid = substr($input, $pos1, $sstrlen);
+    if (empty($sessid)) { exit; }
+    exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
+    if(strpos($SessionGet[0],"rror occurred") != FALSE) { die("Error - SessionGet resulted in error"); }
+    foreach ($SessionGet as $line){
+      list($key,$val) = explode(",",$line,2);
+      $result[$key] = $val;
     }
+  
+    $dhcpok = 0;
+    for ($i=0;$i<5;$i++) {
+      exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
+      foreach ($IpTable as $line){
+        if(strpos($line,$sessid)){
+          if(strpos($line,"DHCP")){
+            list(,$key,$val) = explode(",",$line);
+            list($framedip) = explode(" ",$val);
+            $dhcpok=1;
+          }
+        }
+      }
+      if ($dhcpok === 1) { break; }
+      sleep(1);  
+    }
+
+    if ($dhcpok === 0) { // if user could not get ip with dhcp, disconnect it 
+      exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
+      exit; 
+    }
+
+    $db = new SQLite3($database);
+    $db->busyTimeout(5000);
+    $db->exec('CREATE TABLE IF NOT EXISTS sessions (sessionid varchar(255), username varchar (255), clientip varchar (255), inputoctets varchar (255), ' .
+              'outputoctets varchar (255), framedip varchar (255), nasip varchar (255), nasport varchar (255), acctstarttime varchar (255), '.
+              'acctsessiontime varchar (255), PRIMARY KEY(sessionid))');
+    $query = $db->escapeString('INSERT OR REPLACE INTO sessions (sessionid, username, clientip, inputoctets, outputoctets, framedip, nasip, nasport, acctstarttime, acctsessiontime) VALUES ("'.$sessid.'","'.$result["User Name (Authentication)"].'","'.$result["Client IP Address"].'",NULL,NULL,"'.$framedip.'","'.$result["Server IP Address (Reported)"].'","'.$result["Server Port (Reported)"].'","'.$result["Connection Started at"].'",NULL)');
+    $db->exec($query);
+  
+    $sessid = $db->escapeString($sessid);
+    $results = $db->querySingle("SELECT * FROM sessions WHERE sessionid = '".$sessid."'", true);
+  
+    $acctsessionid = md5($sessid.$results['acctstarttime']);
+    $tmpfname = tempnam($tmpdir, "acctstarttmp_");
+    $handle = fopen($tmpfname, "w");
+  
+    $packet = "Service-Type = Framed-User"."\n".
+              "Framed-Protocol = PPP"."\n".
+              "NAS-Port = ".$results['nasport']."\n".
+              "NAS-Port-Type = Async"."\n".
+              "User-Name = '".$results['username']."'"."\n".
+              "Calling-Station-Id = '".$results['clientip']."'"."\n".
+              "Called-Station-Id = '".$results['nasip']."'"."\n".
+              "Acct-Session-Id = '".$acctsessionid."'"."\n".
+              "Framed-IP-Address = ".$results['framedip']."\n".
+              "Acct-Authentic = RADIUS"."\n".
+              "Event-Timestamp = ".time()."\n".
+              "Acct-Status-Type = Start"."\n".
+              "NAS-Identifier = '".$results['nasip']."'"."\n".
+              "Acct-Delay-Time = 0"."\n". // handle?
+              "NAS-IP-Address = ".$results['nasip']."\n";
+    fwrite($handle, $packet);
+    fclose($handle);
+    exec("radclient ".$radiussrv.":".$radiusport." acct ".$radiuspass." -f ".$tmpfname);
+    unlink($tmpfname);
+  
+    $db->close();
   }
-
-
-  if($ok==0){
-    if($recheck==4) {die("Error - could not find session in retrived IpTable data");}
-    sleep(2);
-    $recheck = $recheck + 1;
-    goto dhcptest;
-  }
-
-
-  $db = new SQLite3($database);
-
-  $db->exec('CREATE TABLE IF NOT EXISTS sessions (sessionid varchar(255), username varchar (255), clientip varchar (255), inputoctets varchar (255), ' .
-            'outputoctets varchar (255), framedip varchar (255), nasip varchar (255), nasport varchar (255), acctstarttime varchar (255), '.
-            'acctsessiontime varchar (255), PRIMARY KEY(sessionid))');
-  $query = $db->escapeString('INSERT OR REPLACE INTO sessions (sessionid, username, clientip, inputoctets, outputoctets, framedip, nasip, nasport, acctstarttime, acctsessiontime) VALUES ("'.$sessid.'","'.$result["User Name (Authentication)"].'","'.$result["Client IP Address"].'",NULL,NULL,"'.$framedip.'","'.$result["Server IP Address (Reported)"].'","'.$result["Server Port (Reported)"].'","'.$result["Connection Started at"].'",NULL)');
-  $db->exec($query);
-
-  $sessid = $db->escapeString($sessid);
-  $results = $db->querySingle("SELECT * FROM sessions WHERE sessionid = '".$sessid."'", true);
-
-  $tmpfname = tempnam($tmpdir, "acctstarttmp_");
-  $handle = fopen($tmpfname, "w");
-
-  $packet = "Service-Type = Framed-User"."\n".
-            "Framed-Protocol = PPP"."\n".
-            "NAS-Port = ".$results['nasport']."\n".
-            "NAS-Port-Type = Async"."\n".
-            "User-Name = '".$results['username']."'"."\n".
-            "Calling-Station-Id = '".$results['clientip']."'"."\n".
-            "Called-Station-Id = '".$results['nasip']."'"."\n".
-            "Acct-Session-Id = '".$sessid."'"."\n".
-            "Framed-IP-Address = ".$results['framedip']."\n".
-            "Acct-Authentic = RADIUS"."\n".
-            "Event-Timestamp = ".time()."\n".
-            "Acct-Status-Type = Start"."\n".
-            "NAS-Identifier = '".$results['nasip']."'"."\n".
-            "Acct-Delay-Time = 0"."\n". // handle?
-            "NAS-IP-Address = ".$results['nasip']."\n";
-  fwrite($handle, $packet);
-  fclose($handle);
-  exec("radclient ".$radiussrv.":".$radiusport." acct ".$radiuspass." -f ".$tmpfname);
-  unlink($tmpfname);
-
-
-  $db->close();
 }
-//fclose( $f );
 
 ?>

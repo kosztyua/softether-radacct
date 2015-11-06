@@ -18,76 +18,73 @@
  */
 
 <?php
-$f = fopen( 'php://stdin', 'r' );
-while( $input = fgets( $f ) ) {
-//while( $input = readline() ) {
-  if ($pid = pcntl_fork()) { return; }
-  acctstop($input);
-  fclose($f);
+require_once("settings.php");
+
+while( $input = readline() ) {
+  $pid = pcntl_fork();
+  if ($pid === -1) { die(); }
+  elseif ($pid === 0) {
+    $delimiter1 = "Session";
+    $delimiter2 = ": The session has been terminated.";
+    $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
+    $pos2 = strpos($input, $delimiter2) - 1;
+    $sstrlen = $pos2 - $pos1;
+    $sessid = substr($input, $pos1, $sstrlen);
+  
+    $delimiter1 = "outgoing data size:";
+    $delimiter2 = "bytes,";
+    $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 1;
+    $pos2 = strpos($input, $delimiter2) - 1;
+    $sstrlen = $pos2 - $pos1;
+    $outdata = substr($input, $pos1, $sstrlen);
+  
+    $delimiter1 = "incoming data size:";
+    $delimiter2 = "bytes.";
+    $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 1;
+    $pos2 = strpos($input, $delimiter2) - 1;
+    $sstrlen = $pos2 - $pos1;
+    $indata = substr($input, $pos1, $sstrlen);
+  
+    $db = new SQLite3($database);
+    $db->busyTimeout(5000);
+    $sessid = $db->escapeString($sessid);
+    $results = $db->querySingle("SELECT * FROM sessions WHERE sessionid = '".$sessid."'", true);
+    if($results == FALSE) { die("Error - could not find sessionid");}
+  
+    list($time1,,$time2) = explode(" ",$results['acctstarttime']);
+    $sessiontime = time() - strtotime($time1." ".$time2);
+  
+    $acctsessionid = md5($sessid.$results['acctstarttime']);
+  
+    $tmpfname = tempnam($tmpdir, "acctstoptmp_");
+    $handle = fopen($tmpfname, "w");
+  
+    $packet = "Service-Type = Framed-User"."\n".
+              "Framed-Protocol = PPP"."\n".
+              "NAS-Port = ".$results['nasport']."\n".
+              "NAS-Port-Type = Async"."\n".
+              "User-Name = '".$results['username']."'"."\n".
+              "Calling-Station-Id = '".$results['clientip']."'"."\n".
+              "Called-Station-Id = '".$results['nasip']."'"."\n".
+              "Acct-Session-Id = '".$acctsessionid."'"."\n".
+              "Framed-IP-Address = ".$results['framedip']."\n".
+              "Acct-Authentic = RADIUS"."\n".
+              "Event-Timestamp = ".time()."\n".
+              "Acct-Session-Time = ".$sessiontime."\n".
+              "Acct-Input-Octets = ".$indata."\n".
+              "Acct-Output-Octets = ".$outdata."\n".
+              "Acct-Status-Type = Stop"."\n".
+              "NAS-Identifier = '".$results['nasip']."'"."\n".
+              "Acct-Delay-Time = 0"."\n".
+              "NAS-IP-Address = ".$results['nasip']."\n";
+    fwrite($handle, $packet);
+    fclose($handle);
+    exec("radclient ".$radiussrv.":".$radiusport." acct ".$radiuspass." -f ".$tmpfname);
+    unlink($tmpfname);
+  
+    $db->exec("DELETE FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1");
+    $db->close();
+  }
 }
-
-function acctstop($input) {
-  require_once("settings.php");
-
-  $delimiter1 = "Session";
-  $delimiter2 = ": The session has been terminated.";
-  $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
-  $pos2 = strpos($input, $delimiter2) - 1;
-  $sstrlen = $pos2 - $pos1;
-  $sessid = substr($input, $pos1, $sstrlen);
-
-  $delimiter1 = "outgoing data size:";
-  $delimiter2 = "bytes,";
-  $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 1;
-  $pos2 = strpos($input, $delimiter2) - 1;
-  $sstrlen = $pos2 - $pos1;
-  $outdata = substr($input, $pos1, $sstrlen);
-
-  $delimiter1 = "incoming data size:";
-  $delimiter2 = "bytes.";
-  $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 1;
-  $pos2 = strpos($input, $delimiter2) - 1;
-  $sstrlen = $pos2 - $pos1;
-  $indata = substr($input, $pos1, $sstrlen);
-
-  $db = new SQLite3($database);
-
-  $sessid = $db->escapeString($sessid);
-  $results = $db->querySingle("SELECT * FROM sessions WHERE sessionid = '".$sessid."'", true);
-  if($results == FALSE) { die("Error - could not find sessionid");}
-
-  list($time1,,$time2) = explode(" ",$results['acctstarttime']);
-  $sessiontime = time() - strtotime($time1." ".$time2);
-
-  $tmpfname = tempnam($tmpdir, "acctstoptmp_");
-  $handle = fopen($tmpfname, "w");
-
-  $packet = "Service-Type = Framed-User"."\n".
-            "Framed-Protocol = PPP"."\n".
-            "NAS-Port = ".$results['nasport']."\n".
-            "NAS-Port-Type = Async"."\n".
-            "User-Name = '".$results['username']."'"."\n".
-            "Calling-Station-Id = '".$results['clientip']."'"."\n".
-            "Called-Station-Id = '".$results['nasip']."'"."\n".
-            "Acct-Session-Id = '".$sessid."'"."\n".
-            "Framed-IP-Address = ".$results['framedip']."\n".
-            "Acct-Authentic = RADIUS"."\n".
-            "Event-Timestamp = ".time()."\n".
-            "Acct-Session-Time = ".$sessiontime."\n".
-            "Acct-Input-Octets = ".$indata."\n".
-            "Acct-Output-Octets = ".$outdata."\n".
-            "Acct-Status-Type = Stop"."\n".
-            "NAS-Identifier = '".$results['nasip']."'"."\n".
-            "Acct-Delay-Time = 0"."\n".
-            "NAS-IP-Address = ".$results['nasip']."\n";
-  fwrite($handle, $packet);
-  fclose($handle);
-  exec("radclient ".$radiussrv.":".$radiusport." acct ".$radiuspass." -f ".$tmpfname);
-  unlink($tmpfname);
-
-  $db->exec("DELETE FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1");
-  $db->close();
-}
-//fclose( $f );
 
 ?>
