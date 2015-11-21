@@ -19,17 +19,18 @@
 
 <?php
 require_once("settings.php");
+require_once("functions.php");
 
 while( $input = readline() ) {
   $pid = pcntl_fork();
   if ($pid === -1) { die(); }
   elseif ($pid === 0) {
-    $delimiter1 = "Session";
-    $delimiter2 = ": The session has been terminated.";
-    $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
-    $pos2 = strpos($input, $delimiter2) - 1;
-    $sstrlen = $pos2 - $pos1;
-    $sessid = substr($input, $pos1, $sstrlen);
+    $re1='.*?((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?![\\d]).*?(".*?")';
+    if ($c=preg_match_all ("/".$re1."/is", $input, $matches))
+    {
+      $softetherip=$matches[1][0];
+      $sessid=trim($matches[2][0],'"');
+    }
   
     $delimiter1 = "outgoing data size:";
     $delimiter2 = "bytes,";
@@ -49,7 +50,7 @@ while( $input = readline() ) {
     $db->busyTimeout(5000);
     $sessid = $db->escapeString($sessid);
     $results = $db->querySingle("SELECT * FROM sessions WHERE sessionid = '".$sessid."'", true);
-    if($results == FALSE) { die("Error - could not find sessionid");}
+    if($results == FALSE) { die("Error - could not find sessionid");} // not good, session may remain zombie in RADIUS, but cannot properly identify to close so meh - maybe close all sessions for user and wait for next interim-update to fix?
   
     list($time1,,$time2) = explode(" ",$results['acctstarttime']);
     $sessiontime = time() - strtotime($time1." ".$time2);

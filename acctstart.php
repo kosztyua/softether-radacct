@@ -19,42 +19,24 @@
   
 <?php
 require_once("settings.php");
+require_once("functions.php");
 while( $input = readline() ) {
   $pid = pcntl_fork();
   if ($pid === -1) { die(); }
   elseif ($pid === 0) {
-    $delimiter1 = "The new session";
-    $delimiter2 = "has been created";
-    $pos1 = strpos($input, $delimiter1) + strlen($delimiter1) + 2;
-    $pos2 = strpos($input, $delimiter2) - 2;
-    $sstrlen = $pos2 - $pos1;
-    $sessid = substr($input, $pos1, $sstrlen);
+    $re1='.*?((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?![\\d]).*?".*?".*?(".*?")';
+    if ($c=preg_match_all ("/".$re1."/is", $input, $matches))
+    {
+      $softetherip=$matches[1][0];
+      $sessid=trim($matches[2][0],'"');
+    }
     if (empty($sessid)) { exit; }
-    exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
-    if(strpos($SessionGet[0],"rror occurred") != FALSE) { die("Error - SessionGet resulted in error"); }
-    foreach ($SessionGet as $line){
-      list($key,$val) = explode(",",$line,2);
-      $result[$key] = $val;
-    }
-  
-    $dhcpok = 0;
-    for ($i=0;$i<5;$i++) {
-      exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
-      foreach ($IpTable as $line){
-        if(strpos($line,$sessid)){
-          if(strpos($line,"DHCP")){
-            list(,$key,$val) = explode(",",$line);
-            list($framedip) = explode(" ",$val);
-            $dhcpok=1;
-          }
-        }
-      }
-      if ($dhcpok === 1) { break; }
-      sleep(1);  
-    }
+    
+    $result = getsessiondata($sessid); // get session details from HUB
+    $framedip = getdhcpip($sessid); // get DHCP assigned IP from HUB 
 
-    if ($dhcpok === 0) { // if user could not get ip with dhcp, disconnect it 
-      exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
+    if ($framedip === FALSE) { // if user could not get ip with dhcp, disconnect it 
+      disconnectsession($sessid);
       exit; 
     }
 

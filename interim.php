@@ -19,6 +19,7 @@
  
 <?php
 require_once("settings.php");
+require_once("functions.php");
 
 exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
 $sessids = array();
@@ -33,7 +34,7 @@ $db = new SQLite3($database);
 $db->busyTimeout(5000);
 foreach ($sessids as $sessid){
   exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
-  if(strpos($SessionGet[0],"rror occurred") != FALSE) { continue; } // hmm
+  if(strpos($SessionGet[0],"rror occurred") != FALSE) { continue; } // hmm 
   foreach ($SessionGet as $line){
     list($key,$val) = explode(",",$line,2);
     $sessiondata[$sessid][$key] = $val;
@@ -41,7 +42,11 @@ foreach ($sessids as $sessid){
 
   $sessid = $db->escapeString($sessid);
   $results = $db->querySingle("SELECT * FROM sessions WHERE sessionid = '".$sessid."'", true);
-  if($results == FALSE) { continue; } //hmhm
+  if($results == FALSE) // if local accounting does not have session, should be disconnected immediately 
+  { 
+    disconnectsession($sessid);
+    break; // jump to next session
+  }
 
   list($time1,,$time2) = explode(" ",$results['acctstarttime']);
   $sessiontime = time() - strtotime($time1." ".$time2);
@@ -54,6 +59,9 @@ foreach ($sessids as $sessid){
 
   $tmpfname = tempnam($tmpdir, "interimtmp_");
   $handle = fopen($tmpfname, "w");
+
+  $query = "UPDATE sessions SET inputoctets = '" . $indata . "', outputoctets = '" . $outdata . "', acctsessiontime = '" . $sessiontime . "' WHERE sessionid = '" . $sessid . "'";
+  $db->exec($query);
 
   $packet = "Service-Type = Framed-User"."\n".
             "Framed-Protocol = PPP"."\n".
