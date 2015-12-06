@@ -19,4 +19,9 @@ The scripts are created for my needs, it is not guaranteed to work with your set
 
 6. Profit. 
 
+For interim RADIUS updates, setup a crontab with interim.php. 
+For archiving old log files, setup a crontab with archive.php, it will gzip every logfile older than 1 day and remove older than 365 days. 
+
 I will gladly take advices or notes how you corrected this script. Especially if I could get a nice regex - that calls for a beer. 
+
+
