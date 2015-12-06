@@ -18,6 +18,7 @@
  */
 
 <?php
+
 require_once("settings.php");
 require_once("functions.php");
 
@@ -25,11 +26,11 @@ while( $input = readline() ) {
   $pid = pcntl_fork();
   if ($pid === -1) { die(); }
   elseif ($pid === 0) {
-    $re1='.*?((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?![\\d]).*?(".*?")';
+    $re1 = '\d (\S+) \[.*Session \"(.+)\": The session has been terminated.';
     if ($c=preg_match_all ("/".$re1."/is", $input, $matches))
     {
       $softetherip=$matches[1][0];
-      $sessid=trim($matches[2][0],'"');
+      $sessid=$matches[2][0];
     }
   
     $delimiter1 = "outgoing data size:";
@@ -82,8 +83,8 @@ while( $input = readline() ) {
     fclose($handle);
     exec("radclient ".$radiussrv.":".$radiusport." acct ".$radiuspass." -f ".$tmpfname);
     unlink($tmpfname);
-  
-    $db->exec("DELETE FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1");
+
+    $db->exec("DELETE FROM sessions WHERE sessionid = (SELECT sessionid FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1)");
     $db->close();
   }
 }
