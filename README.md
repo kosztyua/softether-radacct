@@ -11,7 +11,7 @@ yum -y install syslog-ng syslog-ng-libdbi
 ```
 yum install php -y
 ```
-*  Install radius clien utility.
+*  Install radius client utility.
 ```
 yum install freeradius-utils -y
 ```
