@@ -1,3 +1,4 @@
+<?php
 /*
  * SoftEther RADIUS accounting PHP script
  * Copyright (C) 2015 Andras Kosztyu (kosztyua@vipcomputer.hu)
@@ -17,14 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
-<?php
-$apipass = "123"; // softether hub password
-$radiussrv = "123"; // radius server address
-$radiuspass = "123"; // radius secret
+$apipass = "PasswordForHubname"; // softether hub password
+$radiussrv = "radius.domain.tld"; // radius server address
+$radiuspass = "RadiusSecretForThisSoftetherServer"; // radius secret
 $radiusport = "1813"; // radius server accounting port
 $database = "/var/radius/sessions.db"; // temporary database location
 $tmpdir = "/tmp"; // temporary directory
-$hubname = "123"; // softether hub name
-$softetherip = "123"; // softether hub address
+$hubname = "HubName"; // softether hub name
+$softetherip = "softether.domain.tld"; // softether hub address
 $vpncmd = "/usr/local/vpnserver/vpncmd";
 ?>
