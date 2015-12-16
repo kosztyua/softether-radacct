@@ -27,4 +27,6 @@ yum install freeradius-utils -y
 
 *  Modify the SoftEther to send syslog to the syslog-ng server.
 
-⋅⋅*  Profit. 
+*  Profit. 
+
+For interim RADIUS updates, setup a crontab with interim.php. For archiving old log files, setup a crontab with archive.php, it will gzip every logfile older than 1 day and remove older than 365 days.
