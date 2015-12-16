@@ -27,4 +27,4 @@ $tmpdir = "/tmp"; // temporary directory
 $hubname = "HubName"; // softether hub name
 $softetherip = "softether.domain.tld"; // softether hub address
 $vpncmd = "/usr/local/vpnserver/vpncmd";
-?>
+
