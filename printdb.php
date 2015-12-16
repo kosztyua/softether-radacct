@@ -1,3 +1,4 @@
+<?php
 /*
  * SoftEther RADIUS accounting PHP script
  * Copyright (C) 2015 Andras Kosztyu (kosztyua@vipcomputer.hu)
@@ -16,8 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
- 
-<?php
+
 require_once("settings.php");
 $db = new SQLite3($database);
 
