@@ -6,25 +6,25 @@ How does this work? The SoftEther server sends HUB security logs to a remote Sys
 
 The scripts are created for my needs, it is not guaranteed to work with your settings. They are not optimized and have not been tested in production environment.
 
-1. Install a syslog-ng server and create new listener based on the example (syslog-ng_softether.conf).
+*  Install a syslog-ng server and create new listener based on the example (syslog-ng_softether.conf).
 ```
 cd /root
 wget http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 rpm -Uvh /root/epel-release-7-5.noarch.rpm
 yum -y install syslog-ng syslog-ng-libdbi
 ```
-2. Install PHP and place the PHP files somewhere. 
+*  Install PHP and place the PHP files somewhere. 
 ```
 yum install php -y
 ```
-3. Install radius clien utility.
+*  Install radius clien utility.
 ```
 yum install freeradius-utils -y
 ```
-5. Modify the settings.php according to need. Add the new client to the RADIUS server.
+*  Modify the settings.php according to need. Add the new client to the RADIUS server.
 
-6. Restart syslog-ng server.
+*  Restart syslog-ng server.
 
-7. Modify the SoftEther to send syslog to the syslog-ng server.
+*  Modify the SoftEther to send syslog to the syslog-ng server.
 
-8. Profit. 
+⋅⋅*  Profit. 
