@@ -1,3 +1,4 @@
+<?php
 /*
  * SoftEther RADIUS accounting PHP script
  * Copyright (C) 2015 Andras Kosztyu (kosztyua@vipcomputer.hu)
@@ -17,7 +18,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
-<?php
 require_once("settings.php");
 require_once("functions.php");
 
@@ -89,4 +89,3 @@ foreach ($sessids as $sessid){
 $db->close();
 
 ?>
-
