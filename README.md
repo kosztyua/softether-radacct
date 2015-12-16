@@ -1,4 +1,4 @@
-SoftEther RADIUS accounting PHP script
+SoftEther RADIUS accounting PHP script ( for Centos 7)
 
 *  Install a syslog-ng server and create new listener based on the example (syslog-ng_softether.conf).
 ```
