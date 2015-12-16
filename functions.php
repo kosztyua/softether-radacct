@@ -55,4 +55,4 @@ function disconnectsession($sessid) {
   exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
 }
 
-pcntl_signal(SIGCHLD, SIG_IGN);
+pcntl_signal(SIGCHLD, SIG_IGN); //to kill zombie children processes
