@@ -1,3 +1,5 @@
+<?php
+
 /*
  * SoftEther RADIUS accounting PHP script
  * Copyright (C) 2015 Andras Kosztyu (kosztyua@vipcomputer.hu)
@@ -17,8 +19,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
-<?php
-
 function getsessiondata($sessid) {
   global $vpncmd, $softetherip, $hubname, $apipass;
   exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid,$SessionGet);
@@ -55,4 +55,4 @@ function disconnectsession($sessid) {
   exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
 }
 
-?>
+pcntl_signal(SIGCHLD, SIG_IGN);
