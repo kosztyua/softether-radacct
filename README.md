@@ -9,7 +9,8 @@ yum -y install syslog-ng syslog-ng-libdbi
 ```
 *  Install PHP and place the PHP files somewhere. 
 ```
-yum install php -y
+yum install php php-pdo -y
+mkdir /var/radius
 ```
 *  Install radius client utility.
 ```
