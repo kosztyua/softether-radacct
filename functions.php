@@ -1,3 +1,5 @@
+<?php
+
 /*
  * SoftEther RADIUS accounting PHP script
  * Copyright (C) 2015 Andras Kosztyu (kosztyua@vipcomputer.hu)
@@ -17,11 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
-<?php
-
 function getsessiondata($sessid) {
-  global $softetherip, $hubname, $apipass;
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
+  global $vpncmd, $softetherip, $hubname, $apipass;
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid,$SessionGet);
   if(strpos($SessionGet[0],"rror occurred") != FALSE) { die("Error - SessionGet resulted in error"); }
   foreach ($SessionGet as $line){
     list($key,$val) = explode(",",$line,2);
@@ -31,9 +31,10 @@ function getsessiondata($sessid) {
 }
 
 function getdhcpip($sessid) {
-  global $softetherip, $hubname, $apipass;
+  global $vpncmd, $softetherip, $hubname, $apipass;
+  $dhcpok = 0;
   for ($i=0;$i<5;$i++) {
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD IpTable", $IpTable);
     foreach ($IpTable as $line){
       if(strpos($line,$sessid)){
         if(strpos($line,"DHCP")){
@@ -50,8 +51,8 @@ function getdhcpip($sessid) {
 }
 
 function disconnectsession($sessid) {
-  global $softetherip, $hubname, $apipass;
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
+  global $vpncmd, $softetherip, $hubname, $apipass;
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
 }
 
-?>
+pcntl_signal(SIGCHLD, SIG_IGN); //to kill zombie children processes
