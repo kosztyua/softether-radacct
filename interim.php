@@ -1,3 +1,4 @@
+<?php
 /*
  * SoftEther RADIUS accounting PHP script
  * Copyright (C) 2015 Andras Kosztyu (kosztyua@vipcomputer.hu)
@@ -17,11 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
  
-<?php
 require_once("settings.php");
 require_once("functions.php");
 
-exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
+exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionList", $SessionList);
 $sessids = array();
 foreach ($SessionList as $index=>$line){
   if(!strpos($line,"Local Bridge") && !strpos($line,"SecureNAT Session") && !strpos($line,"User Name")){
@@ -33,7 +33,7 @@ if(count($sessids)==0){die("No sessions open");}
 $db = new SQLite3($database);
 $db->busyTimeout(5000);
 foreach ($sessids as $sessid){
-  exec("vpncmd ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
+  exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CSV /CMD SessionGet ".$sessid, $SessionGet);
   if(strpos($SessionGet[0],"rror occurred") != FALSE) { continue; } // hmm 
   foreach ($SessionGet as $line){
     list($key,$val) = explode(",",$line,2);
@@ -89,4 +89,3 @@ foreach ($sessids as $sessid){
 $db->close();
 
 ?>
-
