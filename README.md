@@ -8,20 +8,26 @@ How does this work? The SoftEther server sends HUB security logs to a remote Sys
 The scripts are created for my needs, it is not guaranteed to work with your settings. They are not optimized and have not been tested in production environment.
 
 1. Install a syslog-ng server and create new listener based on the example (syslog-ng_softether.conf).
-
-2. Install PHP and place the PHP files somewhere. 
-
-3. Modify the settings.php according to need. Add the new client to the RADIUS server.
-
-4. Restart syslog-ng server.
-
-5. Modify the SoftEther to send syslog to the syslog-ng server.
-
-6. Profit. 
-
+```
+cd /root
+wget http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+rpm -Uvh /root/epel-release-7-5.noarch.rpm
+yum -y i
+```
+2. Install PHP, SQLite and place the PHP files somewhere. 
+```
+yum install php php-pdo -y
+mkdir /var/radius
+```
+3. Install radius client utility.
+```
+yum install freeradius-utils -y
+```
+4. Modify the settings.php according to need. Add the new client to the RADIUS server.
+5. Restart syslog-ng server.
+6. Modify the SoftEther to send syslog to the syslog-ng server.
+7. Profit. 
 For interim RADIUS updates, setup a crontab with interim.php. 
 For archiving old log files, setup a crontab with archive.php, it will gzip every logfile older than 1 day and remove older than 365 days. 
-
-I will gladly take advices or notes how you corrected this script. Especially if I could get a nice regex - that calls for a beer. 
 
 
