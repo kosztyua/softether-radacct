@@ -84,6 +84,7 @@ while( $input = readline() ) {
 
     $db->exec("DELETE FROM sessions WHERE sessionid = (SELECT sessionid FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1)");
     $db->close();
+    exit(0);
   }
 }
 
