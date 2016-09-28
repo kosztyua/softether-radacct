@@ -18,13 +18,22 @@
  */
  
 <?php
-$apipass = "123"; // softether hub password
-$radiussrv = "123"; // radius server address
-$radiuspass = "123"; // radius secret
+
+// SE specific settings
+$apipass = "TotallySecretPassword1"; // softether hub password
+$hubname = "HUB"; // softether hub name
+$softetherip = "192.168.1.122"; // softether hub address
+$vpncmd = "/usr/local/vpnserver/vpncmd";
+
+// radius specific settings
+$radiussrv = array("192.168.1.123","192.168.1.123"); // radius server addresses, 1 or more for backup
+$radiuspass = "AnotherTotallySecret1"; // radius secret
 $radiusport = "1813"; // radius server accounting port
+$radtimeout = "5"; // radius query timeout in seconds, can be floating point number - normally should be 3, and up to 10 on slow networks
+$radretry = "2"; // radius query retries in integer, if query timeouts
+ 
+// other settings
 $database = "/var/radius/sessions.db"; // temporary database location
 $tmpdir = "/tmp"; // temporary directory
-$hubname = "123"; // softether hub name
-$softetherip = "123"; // softether hub address
-$vpncmd = "/usr/local/vpnserver/vpncmd";
+
 ?>

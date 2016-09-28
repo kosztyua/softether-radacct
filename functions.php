@@ -45,7 +45,7 @@ function getdhcpip($sessid) {
       }
     }
     if ($dhcpok === 1) { return $framedip; }
-    sleep(1);  
+    sleep(2);  
   }
   return FALSE;
 }
@@ -53,6 +53,18 @@ function getdhcpip($sessid) {
 function disconnectsession($sessid) {
   global $vpncmd, $softetherip, $hubname, $apipass;
   exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
+}
+
+function radquery($tmpfname) {
+  global $radiussrv, $radiusport, $radiuspass, $radtimeout, $radretry;
+  $radsrvcount = count($radiussrv);
+  $i = 0;
+  while ($i<$radsrvcount) {
+    unset($output);
+    exec("radclient ".$radiussrv[$i].":".$radiusport." acct -f ".$tmpfname." -r ".$radretry." -t ".$radtimeout." ".$radiuspass." 2>&1", $output);
+    if (strpos($output[0], 'code 5') !== false) { break; }
+    $i++;
+  }  
 }
 
 pcntl_signal(SIGCHLD, SIG_IGN); //to kill zombie children processes

@@ -75,8 +75,7 @@ while( $input = readline() ) {
               "NAS-IP-Address = ".$results['nasip']."\n";
     fwrite($handle, $packet);
     fclose($handle);
-
-    exec("radclient ".$radiussrv.":".$radiusport." acct ".$radiuspass." -f ".$tmpfname);
+    radquery($tmpfname);
     unlink($tmpfname);
   
     $db->close();
