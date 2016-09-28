@@ -83,7 +83,7 @@ foreach ($sessids as $sessid){
             "NAS-IP-Address = ".$results['nasip']."\n";
   fwrite($handle, $packet);
   fclose($handle);
-  radquery($tmpfname);
+  radquery($tmpfname,0);
   unlink($tmpfname);
 }
 $db->close();

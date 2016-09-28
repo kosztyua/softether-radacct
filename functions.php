@@ -55,16 +55,21 @@ function disconnectsession($sessid) {
   exec($vpncmd." ".$softetherip." /SERVER /HUB:".$hubname." /PASSWORD:".$apipass." /CMD SessionDisconnect ".$sessid, $output);
 }
 
-function radquery($tmpfname) {
+function radquery($tmpfname,$debug) {
   global $radiussrv, $radiusport, $radiuspass, $radtimeout, $radretry;
   $radsrvcount = count($radiussrv);
   $i = 0;
   while ($i<$radsrvcount) {
-    unset($output);
     exec("radclient ".$radiussrv[$i].":".$radiusport." acct -f ".$tmpfname." -r ".$radretry." -t ".$radtimeout." ".$radiuspass." 2>&1", $output);
-    if (strpos($output[0], 'code 5') !== false) { break; }
+    if (strpos($output[$i], 'code 5') !== false) { $success=1; break; }
     $i++;
-  }  
+  }
+  if ($debug === 1) {
+    echo "### softether-radacct testing ###\n";
+    echo "We received the following response from the RADIUS server(s):\n";
+    print_r($output);
+    if ($success === 1) { echo "The test was SUCCESSFUL, we sent accounting data and received OK (code 5) back!\n\n"; } else { echo "The test was UNSUCCESSFUL, please see the logs above for the reason!\n\n"; }
+  }
 }
 
 pcntl_signal(SIGCHLD, SIG_IGN); //to kill zombie children processes

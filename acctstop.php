@@ -79,7 +79,7 @@ while( $input = readline() ) {
               "NAS-IP-Address = ".$results['nasip']."\n";
     fwrite($handle, $packet);
     fclose($handle);
-    radquery($tmpfname);
+    radquery($tmpfname,0);
     unlink($tmpfname);
 
     $db->exec("DELETE FROM sessions WHERE sessionid = (SELECT sessionid FROM sessions WHERE sessionid = '".$sessid."' LIMIT 1)");
