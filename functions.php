@@ -61,7 +61,7 @@ function radquery($tmpfname,$debug) {
   $i = 0;
   while ($i<$radsrvcount) {
     exec("radclient ".$radiussrv[$i].":".$radiusport." acct -f ".$tmpfname." -r ".$radretry." -t ".$radtimeout." ".$radiuspass." 2>&1", $output);
-    if (strpos($output[$i], 'code 5') !== false) { $success=1; break; }
+    if (strpos($output[$i], 'code 5') !== false) { $success=1; if($debug!==1) {break;} }
     $i++;
   }
   if ($debug === 1) {
